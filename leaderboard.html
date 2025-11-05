@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mesopotamia Quiz Leaderboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: #020617;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 8px 10px;
+      font-size: 13px;
+      border-bottom: 1px solid #1f2937;
+    }
+    th {
+      background: #111827;
+      text-align: left;
+    }
+    tr:nth-child(even) td {
+      background: #030712;
+    }
+    .correct {
+      color: #22c55e;
+      font-weight: 600;
+    }
+    .incorrect {
+      color: #ef4444;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mesopotamia Quiz Leaderboard</h1>
+  <p style="font-size: 13px; color: #9ca3af;">
+    Game: Angry Birds – Mesopotamia Edition • Collection: <code>mesopotamia_scores</code>
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>When</th>
+        <th>Name</th>
+        <th>Outcome</th>
+        <th>Correct?</th>
+        <th>Question</th>
+        <th>Your Answer</th>
+      </tr>
+    </thead>
+    <tbody id="rows">
+      <tr><td colspan="6">Loading…</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTq5Yhu0CC4T0J2pgDD0zyan3i1PicxOc",
+      authDomain: "mesopotamia-rider-leaderboard.firebaseapp.com",
+      projectId: "mesopotamia-rider-leaderboard",
+      storageBucket: "mesopotamia-rider-leaderboard.firebasestorage.app",
+      messagingSenderId: "469063803329",
+      appId: "1:469063803329:web:823d63cb02bf5096d04f40",
+      measurementId: "G-R7YH8DDBE0"
+    };
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    function loadScores() {
+      const tbody = document.getElementById("rows");
+      tbody.innerHTML = "<tr><td colspan='6'>Loading…</td></tr>";
+
+      db.collection("mesopotamia_scores")
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .get()
+        .then((snap) => {
+          tbody.innerHTML = "";
+          if (snap.empty) {
+            tbody.innerHTML = "<tr><td colspan='6'>No data yet.</td></tr>";
+            return;
+          }
+
+          snap.forEach(doc => {
+            const d = doc.data();
+            const tr = document.createElement("tr");
+
+            const when = d.createdAt && d.createdAt.toDate
+              ? d.createdAt.toDate().toLocaleString()
+              : "";
+
+            const tdWhen = document.createElement("td");
+            tdWhen.textContent = when;
+
+            const tdName = document.createElement("td");
+            tdName.textContent = d.name || "";
+
+            const tdOutcome = document.createElement("td");
+            tdOutcome.textContent = d.outcome || "";
+
+            const tdCorrect = document.createElement("td");
+            tdCorrect.textContent = d.correct ? "Correct" : "Wrong";
+            tdCorrect.className = d.correct ? "correct" : "incorrect";
+
+            const tdQuestion = document.createElement("td");
+            tdQuestion.textContent = d.questionText || "";
+
+            const tdAnswer = document.createElement("td");
+            tdAnswer.textContent = d.chosenChoice
+              ? d.chosenChoice + " (correct: " + (d.correctChoice || "") + ")"
+              : "";
+
+            tr.appendChild(tdWhen);
+            tr.appendChild(tdName);
+            tr.appendChild(tdOutcome);
+            tr.appendChild(tdCorrect);
+            tr.appendChild(tdQuestion);
+            tr.appendChild(tdAnswer);
+
+            tbody.appendChild(tr);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          tbody.innerHTML = "<tr><td colspan='6'>Error loading scores. Check console.</td></tr>";
+        });
+    }
+
+    loadScores();
+  </script>
+</body>
+</html>
